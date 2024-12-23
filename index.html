@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu des Énigmes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .enigma-container {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .solved {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            animation: solved-animation 0.5s ease-in-out;
+        }
+
+        @keyframes solved-animation {
+            from {
+                transform: scale(1.05);
+                box-shadow: 0 0 15px rgba(40, 167, 69, 0.6);
+            }
+
+            to {
+                transform: scale(1);
+                box-shadow: none;
+            }
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            height: 60px;
+        }
+
+        input {
+            width: calc(100% - 20px);
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        input:disabled {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        #success-message {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Énigme 2/4</h1>
+    <p>Lisez les énigmes ci-dessous et entrez vos réponses sans vous aider d'Internet:</p>
+
+    <div id="enigma-list"></div>
+
+    <!-- Message de succès -->
+    <div id="success-message">
+        <h2>Félicitations ! 🎉</h2>
+        <p>Vous avez résolu toutes les énigmes. Votre nouvel indice:</p>
+        <p style="font-size: 24px; font-weight: bold;">La personne qui porte une montre à gousset a pour chiffre préféré
+            le double de celui de l'aristocrate.</p>
+    </div>
+
+    <script>
+        const enigmas = [
+            {
+                id: 1,
+                texte: "Quel mot commence par la lettre 'e' et contient une lettre ?",
+                reponses: ["Une enveloppe", "enveloppe"]
+            },
+            {
+                id: 2,
+                texte: "Je commence la nuit et je finis le matin. Je passe deux fois dans l'année. Qui suis-je ?",
+                reponses: ["La lettre n", "n", "lettre n"]
+            },
+            {
+                id: 3,
+                texte: "Plus souvent ouverte que fermée, plus souvent dehors que dedans, je peux même changer de couleur en me retournant. Qui suis- je ?",
+                reponses: ["La veste", "veste"]
+            },
+            {
+                id: 4,
+                texte: "On peut me briser rien qu'en prononçant mon nom ?",
+                reponses: ["Le silence", "silence"]
+            },
+            {
+                id: 5,
+                texte: "Il y a 6 ans, mon frère avait le double de l'âge que j'avais. Dans 5 ans, nous aurons à nous deux 40 ans. Quel est mon âge ?",
+                reponses: ["12"]
+            },
+            {
+                id: 6,
+                texte: "Volaille en cuisine, je n'ai pourtant rien d'un volatile ?",
+                reponses: ["Le lapin", "lapin"]
+            },
+            {
+                id: 7,
+                texte: "D'une arme à feu, il peut être une pièce. Et nos amis sont nombreux issus de son espèce. Je suis ... ? ",
+                reponses: ["Le chien", "chien"]
+            },
+            {
+                id: 8,
+                texte: "Bonne ou mauvaise, d'or ou d'argent, faites attention à vos pas...",
+                reponses: ["La mine", "mine"]
+            },
+            {
+                id: 9,
+                texte: "Les pauvres en ont. Les riches en ont besoin. Si l’on en mange, on meurt.",
+                reponses: ["Rien"]
+            },
+            {
+                id: 10,
+                texte: "Je brille la nuit, mais je disparais le jour. Qui suis-je ?",
+                reponses: ["Les étoiles", "étoile"]
+            }
+        ];
+
+        let solvedCount = 0;
+
+        function initEnigmas() {
+            const enigmaList = document.getElementById('enigma-list');
+            enigmas.forEach((enigma) => {
+                const container = document.createElement('div');
+                container.id = `enigma-${enigma.id}`;
+                container.className = 'enigma-container';
+
+                const enigmaCard = document.createElement('div');
+                enigmaCard.className = 'enigma-card';
+                const enigmaText = document.createElement('p');
+                enigmaText.className = 'enigma-text';
+                enigmaText.innerText = enigma.texte;
+                enigmaCard.appendChild(enigmaText);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Entrez votre réponse';
+                input.id = `input-${enigma.id}`;
+
+                const button = document.createElement('button');
+                button.innerText = 'Valider';
+                button.onclick = () => verifierReponse(enigma.id);
+
+                const feedback = document.createElement('p');
+                feedback.id = `feedback-${enigma.id}`;
+
+                container.appendChild(enigmaCard);
+                container.appendChild(input);
+                container.appendChild(button);
+                container.appendChild(feedback);
+
+                enigmaList.appendChild(container);
+            });
+        }
+
+
+        function verifierReponse(id) {
+            const enigma = enigmas.find((e) => e.id === id);
+            const input = document.getElementById(`input-${id}`);
+            const feedback = document.getElementById(`feedback-${id}`);
+            const container = document.getElementById(`enigma-${id}`);
+
+            const userValue = input.value.trim().toLowerCase();
+            let isCorrect = false;
+
+            // Vérifie toutes les réponses possibles
+            for (let i = 0; i < enigma.reponses.length; i++) {
+                const reponse = enigma.reponses[i];
+                const similariteScore = similarite(userValue, reponse);
+                if (similariteScore >= 70) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+
+            if (isCorrect) {
+                if (!container.classList.contains('solved')) {
+                    solvedCount++;
+                }
+                input.value = `${enigma.reponses[0]} ✅`; // Affiche la première réponse correcte
+                input.disabled = true;
+                feedback.innerText = 'Bonne réponse !';
+                feedback.style.color = 'green';
+                container.classList.add('solved');
+
+                if (solvedCount === enigmas.length) {
+                    afficherMessageDeSucces();
+                }
+            } else {
+                feedback.innerText = 'Mauvaise réponse, essayez encore.';
+                feedback.style.color = 'red';
+            }
+        }
+
+        function afficherMessageDeSucces() {
+            const successMessage = document.getElementById('success-message');
+            successMessage.style.display = 'block';
+        }
+
+        function similarite(str1, str2) {
+            const distance = levenshtein(str1.toLowerCase(), str2.toLowerCase());
+            const longueurMax = Math.max(str1.length, str2.length);
+            return (1 - distance / longueurMax) * 100;
+        }
+
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        window.onload = initEnigmas;
+    </script>
+</body>
+
+</html>
